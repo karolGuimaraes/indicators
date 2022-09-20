@@ -8,11 +8,13 @@ import time
 
 N = 14
 M = 20
+COLUMN_NAMES = ['timestamp', 'indicador-0', 'indicador-1', 'indicador-2', 'indicador-3']
 
 @click.command()
 @click.option('--start', help='--start_date=2022-09-01')
 @click.option('--end', help='--end_date=2022-09-30')
 def main(start, end):
+
     start_date = datetime.strptime(start, '%Y-%m-%d')
     end_date = datetime.strptime(end, '%Y-%m-%d')
 
@@ -25,20 +27,21 @@ def main(start, end):
     f = pd.read_csv('static/dataset/bitstamp.csv')
     ts = pd.Timestamp
 
-    print(f['Timestamp'])
-    print('{} < Timestamp < {}'.format(timestamp_start_date, timestamp_end_date))
-    #filtered_df = f.query(f"{timestamp_start_date} <= Timestamp <= {timestamp_end_date}")
-    filtered_df = f[f['Timestamp'].strftime('%Y-%m-%d') == '2019-12-30']
+    # print(f['Timestamp'])
+    # print('{} < Timestamp < {}'.format(timestamp_start_date, timestamp_end_date))
+    # #filtered_df = f.query(f"{timestamp_start_date} <= Timestamp <= {timestamp_end_date}")
+    # filtered_df = f[f['Timestamp'].strftime('%Y-%m-%d') == '2019-12-30']
 
 
-    print(filtered_df)
+    #print(filtered_df)
 
     ema, rsi, sma = 0, 0, 0
     variation = 0
     last_close_price = 0
     quotes = {}
     gain = {}
-    loss = {}    
+    loss = {}
+    data = []  
 
     for index, row in f.iterrows():
         #print("------ ", index, datetime.fromtimestamp(row['Timestamp']))
@@ -90,6 +93,15 @@ def main(start, end):
   
         last_close_price = row['Close']
         #print(row['Timestamp'], ema, rsi, bolu, bold)
+        data.append([row['Timestamp'], ema, rsi, bolu, bold])
+
+    
+    indicadors = pd.DataFrame(data)
+    indicadors.to_csv(f"tmp/indicadors_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv", 
+                                                        index=False, header=COLUMN_NAMES)
+    
+    return 
+
 
 
 def exponential_moving_average(close_price, period, last_ema=0):
