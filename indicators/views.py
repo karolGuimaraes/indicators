@@ -18,22 +18,15 @@ def main(start, end):
     start_date = datetime.strptime(start, '%Y-%m-%d')
     end_date = datetime.strptime(end, '%Y-%m-%d')
 
-    timestamp_start_date = start_date.timestamp()
-    timestamp_end_date = end_date.timestamp()
-    print(timestamp_start_date, timestamp_end_date)
+    timestamp_start_date = int(start_date.timestamp())
+    timestamp_end_date = int(end_date.timestamp())
 
     period = (end_date - start_date).days
 
-    f = pd.read_csv('static/dataset/bitstamp.csv')
-    ts = pd.Timestamp
+    dataset = pd.read_csv('static/dataset/bitstamp.csv')
 
-    # print(f['Timestamp'])
-    # print('{} < Timestamp < {}'.format(timestamp_start_date, timestamp_end_date))
-    # #filtered_df = f.query(f"{timestamp_start_date} <= Timestamp <= {timestamp_end_date}")
-    # filtered_df = f[f['Timestamp'].strftime('%Y-%m-%d') == '2019-12-30']
-
-
-    #print(filtered_df)
+    filter = (dataset['Timestamp'] >= timestamp_start_date) & (dataset['Timestamp'] <= timestamp_end_date)
+    dataset = dataset[filter]
 
     ema, rsi, sma = 0, 0, 0
     variation = 0
@@ -43,9 +36,8 @@ def main(start, end):
     loss = {}
     data = []  
 
-    for index, row in f.iterrows():
-        #print("------ ", index, datetime.fromtimestamp(row['Timestamp']))
-        print("------ ", index, row['Timestamp'], type(row['Timestamp']))
+    for index, row in dataset.iterrows():
+        print("------ ", index, row['Timestamp'], datetime.fromtimestamp(row['Timestamp']))
         close_price = row['Close']
         ema = exponential_moving_average(close_price, period, ema)
         
@@ -92,7 +84,6 @@ def main(start, end):
             
   
         last_close_price = row['Close']
-        #print(row['Timestamp'], ema, rsi, bolu, bold)
         data.append([row['Timestamp'], ema, rsi, bolu, bold])
 
     
