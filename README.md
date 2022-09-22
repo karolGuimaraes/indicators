@@ -48,10 +48,10 @@ OPTIONS
 
 O CSV gera os indicadores na seguinte ordem:
 
-   indicador-0 - Média Móvel Exponencial
-   indicador-1 - Índice de Força Relativa
-   indicador-2 - Banda de Bollinger Superior
-   indicador-3 - Banda de Bollinger Inferior
+   - indicador-0 - Média Móvel Exponencial
+   - indicador-1 - Índice de Força Relativa
+   - indicador-2 - Banda de Bollinger Superior
+   - indicador-3 - Banda de Bollinger Inferior
 
 
 ### Testes
