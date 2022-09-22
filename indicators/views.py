@@ -1,4 +1,3 @@
-from audioop import reverse
 import click
 import pandas as pd
 from datetime import datetime
@@ -6,8 +5,8 @@ import itertools
 import numpy as np 
 import time
 
-N = 14
-M = 20
+DAYS_RSI = 14
+DAYS_BOL = 20
 COLUMN_NAMES = ['timestamp', 'indicador-0', 'indicador-1', 'indicador-2', 'indicador-3']
 
 @click.command()
@@ -28,89 +27,104 @@ def main(start, end):
     filter = (dataset['Timestamp'] >= timestamp_start_date) & (dataset['Timestamp'] <= timestamp_end_date)
     dataset = dataset[filter]
 
-    ema, rsi, sma = 0, 0, 0
-    variation = 0
+    ema = 0
     last_close_price = 0
-    quotes = {}
-    gain = {}
-    loss = {}
+    gains, losses, quotes = {}, {}, {}
     data = []  
 
     for index, row in dataset.iterrows():
-        print("------ ", index, row['Timestamp'], datetime.fromtimestamp(row['Timestamp']))
+
+        variation, rsi, bolu, bold = 0, 0, 0, 0
         close_price = row['Close']
-        ema = exponential_moving_average(close_price, period, ema)
-        
+        timestamp = int(row['Timestamp'])
+
         variation = close_price - last_close_price
         if variation > 0:
-            gain[index] = variation
-            loss[index] = 0
+            gains[index] = variation
+            losses[index] = 0
         else:
-            loss[index] = variation
-            gain[index] = 0
+            losses[index] = variation
+            gains[index] = 0
 
         quotes[index] = close_price
 
-        total_gain = 0
-        total_loss = 0
-        bolu, bold = 0, 0
-
-        if (index+1) >= N:
-            # Pega as 14 últimas variações p/ calcular a média
-            lista = dict(itertools.islice(sorted(gain.items(), reverse=True), N))
-            for value in lista.values():
-                total_gain += value
-            
-            avg_gain = total_gain / N
-
-            lista = dict(itertools.islice(sorted(loss.items(), reverse=True), N))
-            for value in lista.values():
-                total_loss += value
-            
-            avg_loss = total_loss / N
-            rsi = relative_strength_index(avg_gain, avg_loss)
-
+        ema = exponential_moving_average(close_price, period, ema)
         
-        if (index+1) >= M:
+        if (index+1) >= DAYS_RSI:
+            rsi = relative_strength_index(gains, losses)
 
-            lista = dict(itertools.islice(sorted(quotes.items(), reverse=True), N))
-            values = list(lista.values())
-            simple_moving_average = np.average(values)
-
-            standard_deviation = np.std(values)
-
-            bolu = simple_moving_average + ( 2 * standard_deviation )
-            bold = simple_moving_average - ( 2 * standard_deviation )
-            
+        if (index+1) >= DAYS_BOL:
+            bolu, bold = bollinger_bands(quotes)
   
         last_close_price = row['Close']
-        data.append([row['Timestamp'], ema, rsi, bolu, bold])
+        data.append([timestamp, ema, rsi, bolu, bold])
 
+    if data:
+        indicadors = pd.DataFrame(data)
+        indicadors.to_csv(f"tmp/indicadors_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv", 
+                                                            index=False, header=COLUMN_NAMES)
     
-    indicadors = pd.DataFrame(data)
-    indicadors.to_csv(f"tmp/indicadors_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv", 
-                                                        index=False, header=COLUMN_NAMES)
+    click.echo('--end--') 
+
+
+def exponential_moving_average(current_price, period, last_ema):
+    '''
+        Média Móvel Exponencial
+
+        MME (ema) = [preço atual - MME(anterior)] x (2/período+1) + MME(anterior)
+    '''
+
+    ema = (current_price - last_ema) * (2/(period+1)) + last_ema
+
+    return ema
+
+
+def relative_strength_index(gains, losses):
+    '''
+        Índice de Força Relativa
+
+        IRF (rsi) = 100 - ( 100 / ( 1 + ( ( gain/N ) / ( loss/N ) )))
+
+        gain = Média das cotações dos últimos N dias em que a cotação da ação subiu.
+        loss = Média das cotações dos últimos N dias em que a cotação da ação caiu.
+        N = O número de dias mais utilizado pelo mercado.
+    '''
+
+    total_gain, total_loss = 0, 0
+
+    gain_period = dict(itertools.islice(sorted(gains.items(), reverse=True), DAYS_RSI))
+    for value in gain_period.values():
+        total_gain += value
     
-    return 
+    avg_gain = total_gain / DAYS_RSI
 
+    loss_period = dict(itertools.islice(sorted(losses.items(), reverse=True), DAYS_RSI))
+    for value in loss_period.values():
+        total_loss += value
+    
+    avg_loss = total_loss / DAYS_RSI
 
+    rsi = 100 - (100 / (1 + (avg_gain/avg_loss)))
 
-def exponential_moving_average(close_price, period, last_ema=0):
-    '''
-        MME = [price - MME(last)] x (2/period+1) + MME(last)
-    '''
-    return (close_price - last_ema) * (2/period+1) + last_ema
-
-
-def relative_strength_index(avg_gain, avg_loss):
-    '''
-        IRF = 100 - (100/(1+( (gain/N) / (loss/N) )))
-
-        n = 14
-    '''
-
-    return 100 - (100 / (1 + (avg_gain/avg_loss)))
+    return rsi
     
 
+def bollinger_bands(quotes):
+    '''
+        Bandas de Bollinger
 
+        Superior (bolu) = Média Móvel Simples (20 dias) + (2 x Desvio Padrão de 20 dias).
+        Inferior (bold) = Média Móvel Simples (20 dias) – (2 x Desvio Padrão de 20 dias).
+    '''
 
+    quotes_period = dict(itertools.islice(sorted(quotes.items(), reverse=True), DAYS_BOL))
+    values = list(quotes_period.values())
+
+    simple_moving_average = np.average(values)
+
+    standard_deviation = np.std(values)
+
+    bolu = simple_moving_average + ( 2 * standard_deviation )
+    bold = simple_moving_average - ( 2 * standard_deviation )
+
+    return bolu, bold
