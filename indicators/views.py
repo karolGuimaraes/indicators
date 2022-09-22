@@ -3,16 +3,14 @@ import pandas as pd
 from datetime import datetime
 import itertools
 import numpy as np 
-import time
 import sys
 
 DAYS_RSI = 14
 DAYS_BOL = 20
-COLUMN_NAMES = ['timestamp', 'indicador-0', 'indicador-1', 'indicador-2', 'indicador-3']
 
 @click.command()
-@click.option('--start_date', default='2021-03-01', help='Início do período de análise. Default 2021-03-01')
-@click.option('--end_date', default='2021-03-31', help='Fim do período de análise. Default 2021-03-31')
+@click.option('--start_date', default='2019-03-01', help='Início do período de análise. Default 2019-03-01')
+@click.option('--end_date', default='2019-03-31', help='Fim do período de análise. Default 2019-03-31')
 @click.option('--days', default=5, help='Dias para a Média Móvel Exponencial. Default 5')
 def main(start_date, end_date, days):
 
@@ -22,7 +20,7 @@ def main(start_date, end_date, days):
     timestamp_start_date = int(start_date.timestamp())
     timestamp_end_date = int(end_date.timestamp())
 
-    dataset = pd.read_csv('static/dataset/bitstamp.csv')
+    dataset = pd.read_csv('static/dataset/bitcoin.csv')
 
     filter = (dataset['Timestamp'] >= timestamp_start_date) & (dataset['Timestamp'] <= timestamp_end_date)
     dataset = dataset[filter]
@@ -32,14 +30,13 @@ def main(start_date, end_date, days):
     gains, losses, quotes = {}, {}, {}
     data = []  
 
-    for index, row in dataset.iterrows():
+    for index, row in enumerate(dataset.itertuples()):
 
         variation, rsi, bolu, bold = 0, 0, 0, 0
-        close_price = row['Close']
-        timestamp = int(row['Timestamp'])
+        close_price = row.Close
+        timestamp = int(row.Timestamp)
 
         ema = exponential_moving_average(close_price, days, ema)
-
 
         variation = close_price - last_close_price
         if variation > 0:
@@ -59,16 +56,17 @@ def main(start_date, end_date, days):
             bolu, bold = bollinger_bands(quotes)
   
 
-        last_close_price = row['Close']
+        last_close_price = row.Close
         data.append([timestamp, ema, rsi, bolu, bold])
 
     if data:
         indicadors = pd.DataFrame(data)
-        indicadors.to_csv(f"tmp/indicadors_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv", 
-                                                            index=False, header=COLUMN_NAMES)
+        indicadors.columns = ['timestamp', 'indicador-0', 'indicador-1', 'indicador-2', 'indicador-3']
+        indicadors.to_csv(f"tmp/indicadors_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv", index=False)
         click.echo(indicadors)
         sys.exit(0)
 
+    click.echo("No data")
     sys.exit(1)
     
 

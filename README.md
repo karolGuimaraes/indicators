@@ -14,7 +14,7 @@ Para executar o projeto sem docker:
 
  - Criar uma virtualenv:
  
-    `$ python -m venv env`
+    `$ python3 -m venv env`
 
  - Iniciar avirtualenv:
 
@@ -39,8 +39,8 @@ OPTIONS
 
 | parâmetro | Formato | Default | Descrição |
 |---|---|---|---|
-| `--start_date`  | yyyy-mm-dd | 2021-03-01 | Data de início. |
-| `--end_date`  | yyyy-mm-dd | 2021-03-31 | Data fim. |
+| `--start_date`  | yyyy-mm-dd | 2019-03-01 | Data de início. |
+| `--end_date`  | yyyy-mm-dd | 2019-03-31 | Data fim. |
 | `--days`  | dd | 5 | Dias para o cálculo da Média Móvel Exponencial. |
 | `--help` | | | Ajuda. |
 
