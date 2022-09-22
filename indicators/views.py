@@ -10,17 +10,16 @@ DAYS_BOL = 20
 COLUMN_NAMES = ['timestamp', 'indicador-0', 'indicador-1', 'indicador-2', 'indicador-3']
 
 @click.command()
-@click.option('--start', help='--start_date=2022-09-01')
-@click.option('--end', help='--end_date=2022-09-30')
-def main(start, end):
+@click.option('--start_date', default='2021-03-01', help='Início do período de análise. Default 2021-03-01')
+@click.option('--end_date', default='2021-03-31', help='Fim do período de análise. Default 2021-03-31')
+@click.option('--days', default=5, help='Dias para a Média Móvel Exponencial. Default 5')
+def main(start_date, end_date, days):
 
-    start_date = datetime.strptime(start, '%Y-%m-%d')
-    end_date = datetime.strptime(end, '%Y-%m-%d')
+    start_date = datetime.strptime(start_date, '%Y-%m-%d')
+    end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
     timestamp_start_date = int(start_date.timestamp())
     timestamp_end_date = int(end_date.timestamp())
-
-    period = (end_date - start_date).days
 
     dataset = pd.read_csv('static/dataset/bitstamp.csv')
 
@@ -48,7 +47,7 @@ def main(start, end):
 
         quotes[index] = close_price
 
-        ema = exponential_moving_average(close_price, period, ema)
+        ema = exponential_moving_average(close_price, days, ema)
         
         if (index+1) >= DAYS_RSI:
             rsi = relative_strength_index(gains, losses)
@@ -67,14 +66,14 @@ def main(start, end):
     click.echo('--end--') 
 
 
-def exponential_moving_average(current_price, period, last_ema):
+def exponential_moving_average(current_price, days, last_ema):
     '''
         Média Móvel Exponencial
 
-        MME (ema) = [preço atual - MME(anterior)] x (2/período+1) + MME(anterior)
+        MME (ema) = [preço atual - MME(anterior)] x (2/dias+1) + MME(anterior)
     '''
 
-    ema = (current_price - last_ema) * (2/(period+1)) + last_ema
+    ema = (current_price - last_ema) * (2/(days+1)) + last_ema
 
     return ema
 
