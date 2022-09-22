@@ -46,7 +46,7 @@ OPTIONS
 
 ### Arquivo
 
-O CSV gera os indicadores na seguinte ordem:
+O CSV gerado em `/tmp` possui os indicadores na seguinte ordem:
 
    - indicador-0 - Média Móvel Exponencial
    - indicador-1 - Índice de Força Relativa
