@@ -1,6 +1,13 @@
 # Indicadores
 
-### - Python: 3.7.10
+### Dependências
+
+ - Python: 3.7.10
+ - Click: Pacote para criar command line interfaces.
+ - Pandas: Lib para manipular os dados do csv.
+ - Matplotlib: Lib para a plotagem dos dados.
+ - Pytest: Framework para execução dos testes.
+
 
 ### Instalação do projeto
 
