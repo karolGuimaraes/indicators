@@ -4,6 +4,7 @@ from datetime import datetime
 import itertools
 import numpy as np 
 import sys
+import matplotlib.pyplot as plt
 
 DAYS_RSI = 14
 DAYS_BOL = 20
@@ -12,10 +13,11 @@ DAYS_BOL = 20
 @click.option('--start_date', default='2019-03-01', help='Início do período de análise. Default 2019-03-01')
 @click.option('--end_date', default='2019-03-31', help='Fim do período de análise. Default 2019-03-31')
 @click.option('--days', default=5, help='Dias para a Média Móvel Exponencial. Default 5')
-def main(start_date, end_date, days):
+@click.option('--show_plot', default=False, help='Exibe o gráfico de indicares. Default False')
+def main(start_date, end_date, days, show_plot):
 
-    start_date = datetime.strptime(start_date, '%Y-%m-%d')
-    end_date = datetime.strptime(end_date, '%Y-%m-%d')
+    start_date = validate(start_date)
+    end_date = validate(end_date)
 
     timestamp_start_date = int(start_date.timestamp())
     timestamp_end_date = int(end_date.timestamp())
@@ -63,12 +65,34 @@ def main(start_date, end_date, days):
         indicadors = pd.DataFrame(data)
         indicadors.columns = ['timestamp', 'indicador-0', 'indicador-1', 'indicador-2', 'indicador-3']
         indicadors.to_csv(f"tmp/indicadors_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv", index=False)
+
+        timeline = pd.to_datetime(indicadors['timestamp'], unit='s').tolist()
+        plt.plot(timeline, indicadors['indicador-0'].tolist())
+        plt.plot(timeline, indicadors['indicador-1'].tolist())
+        plt.plot(timeline, indicadors['indicador-2'].tolist(), marker = 'o')
+        plt.plot(timeline, indicadors['indicador-3'].tolist(), marker = '*')
+        plt.grid(axis = 'y')
+        plt.legend(['Média Móvel Exponencial', 'Índice de Força Relativa', 'Banda de Bollinger Superior', 'Banda de Bollinger Inferior'])
+        plt.title('Indicadores')
+        plt.savefig(f"tmp/indicadors_{datetime.now().strftime('%Y%m%d%H%M%S')}.png", dpi=500)
+        if show_plot:
+            plt.show()
+
         click.echo(indicadors)
         sys.exit(0)
 
     click.echo("No data")
     sys.exit(1)
     
+
+def validate(date):
+    try:
+        date = datetime.strptime(date, '%Y-%m-%d')
+    except ValueError:
+        click.echo(ValueError('Incorrect data format.'))
+        sys.exit(1)
+    return date
+
 
 def exponential_moving_average(current_price, days, last_ema):
     '''
