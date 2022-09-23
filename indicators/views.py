@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 DAYS_RSI = 14
 DAYS_BOL = 20
 
+
 @click.command()
 @click.option('--start_date', default='2019-03-01', help='Início do período de análise. Default 2019-03-01')
 @click.option('--end_date', default='2019-03-31', help='Fim do período de análise. Default 2019-03-31')
@@ -53,11 +54,9 @@ def main(start_date, end_date, days, show_plot):
 
 
         quotes[index] = close_price
-
         if (index+1) >= DAYS_BOL:
             bolu, bold = bollinger_bands(quotes)
   
-
         last_close_price = row.Close
         data.append([timestamp, ema, rsi, bolu, bold])
 
@@ -76,6 +75,9 @@ def main(start_date, end_date, days, show_plot):
     
 
 def plot_data(indicadors, show_plot):
+    '''
+        Plotagem dos dados com o matplotlib
+    '''
 
     timeline = pd.to_datetime(indicadors['timestamp'], unit='s').tolist()
     
@@ -94,6 +96,10 @@ def plot_data(indicadors, show_plot):
 
 
 def validate(date):
+    '''
+        Validação da data
+    '''
+    
     try:
         date = datetime.strptime(date, '%Y-%m-%d')
     except ValueError:
