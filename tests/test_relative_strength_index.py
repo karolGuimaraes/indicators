@@ -39,4 +39,5 @@ def test_relative_strength_index():
 
 
     rsi = relative_strength_index(gains, losses)
+    
     assert round(rsi, 2) == 47.02

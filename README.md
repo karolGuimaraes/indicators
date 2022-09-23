@@ -42,7 +42,7 @@ OPTIONS
 | `--start_date`  | yyyy-mm-dd | 2019-03-01 | Data de início. |
 | `--end_date`  | yyyy-mm-dd | 2019-03-31 | Data fim. |
 | `--days`  | dd | 5 | Dias para o cálculo da Média Móvel Exponencial. |
-| `--show_plot` | True/False | False | Exibe o gráfico de indicares. |
+| `--show_plot` | True/False | False | Exibe o gráfico de indicadores. |
 | `--help` | | | Ajuda. |
 
 ### Arquivo

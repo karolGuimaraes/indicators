@@ -66,30 +66,38 @@ def main(start_date, end_date, days, show_plot):
         indicadors.columns = ['timestamp', 'indicador-0', 'indicador-1', 'indicador-2', 'indicador-3']
         indicadors.to_csv(f"tmp/indicadors_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv", index=False)
 
-        timeline = pd.to_datetime(indicadors['timestamp'], unit='s').tolist()
-        plt.plot(timeline, indicadors['indicador-0'].tolist())
-        plt.plot(timeline, indicadors['indicador-1'].tolist())
-        plt.plot(timeline, indicadors['indicador-2'].tolist(), marker = 'o')
-        plt.plot(timeline, indicadors['indicador-3'].tolist(), marker = '*')
-        plt.grid(axis = 'y')
-        plt.legend(['Média Móvel Exponencial', 'Índice de Força Relativa', 'Banda de Bollinger Superior', 'Banda de Bollinger Inferior'])
-        plt.title('Indicadores')
-        plt.savefig(f"tmp/indicadors_{datetime.now().strftime('%Y%m%d%H%M%S')}.png", dpi=500)
-        if show_plot:
-            plt.show()
+        plot_data(indicadors, show_plot)
 
         click.echo(indicadors)
         sys.exit(0)
 
-    click.echo("No data")
+    click.echo('No data.')
     sys.exit(1)
     
+
+def plot_data(indicadors, show_plot):
+
+    timeline = pd.to_datetime(indicadors['timestamp'], unit='s').tolist()
+    
+    plt.plot(timeline, indicadors['indicador-0'].tolist())
+    plt.plot(timeline, indicadors['indicador-1'].tolist())
+    plt.plot(timeline, indicadors['indicador-2'].tolist(), marker = 'o')
+    plt.plot(timeline, indicadors['indicador-3'].tolist(), marker = '*')
+    
+    plt.grid(axis = 'y')
+    plt.legend(['Média Móvel Exponencial', 'Índice de Força Relativa', 'Banda de Bollinger Superior', 'Banda de Bollinger Inferior'])
+    plt.title('Indicadores')
+    plt.savefig(f"tmp/indicadors_{datetime.now().strftime('%Y%m%d%H%M%S')}.png", dpi=500)
+    
+    if show_plot:
+        plt.show()
+
 
 def validate(date):
     try:
         date = datetime.strptime(date, '%Y-%m-%d')
     except ValueError:
-        click.echo(ValueError('Incorrect data format.'))
+        click.echo('Incorrect data format.')
         sys.exit(1)
     return date
 

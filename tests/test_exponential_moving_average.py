@@ -9,4 +9,5 @@ from indicators.views import exponential_moving_average
 ])
 def test_exponential_moving_average(current_price, days, last_ema, expected_ema):
     ema = exponential_moving_average(current_price, days, last_ema)
+    
     assert round(ema, 2) == expected_ema
