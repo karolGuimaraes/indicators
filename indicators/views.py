@@ -14,8 +14,8 @@ DAYS_BOL = 20
 @click.option('--start_date', default='2019-03-01', help='Início do período de análise. Default 2019-03-01')
 @click.option('--end_date', default='2019-03-31', help='Fim do período de análise. Default 2019-03-31')
 @click.option('--days', default=5, help='Dias para a Média Móvel Exponencial. Default 5')
-@click.option('--show_plot', default=False, help='Exibe o gráfico de indicares. Default False')
-def main(start_date, end_date, days, show_plot):
+@click.option('--plot', default=False, help='Gera o gráfico de indicares. Default False')
+def main(start_date, end_date, days, plot):
 
     start_date = validate(start_date)
     end_date = validate(end_date)
@@ -65,7 +65,8 @@ def main(start_date, end_date, days, show_plot):
         indicadors.columns = ['timestamp', 'indicador-0', 'indicador-1', 'indicador-2', 'indicador-3']
         indicadors.to_csv(f"tmp/indicadors_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv", index=False)
 
-        plot_data(indicadors, show_plot)
+        if plot:
+            plot_data(indicadors)
 
         click.echo(indicadors)
         sys.exit(0)
@@ -74,7 +75,7 @@ def main(start_date, end_date, days, show_plot):
     sys.exit(1)
     
 
-def plot_data(indicadors, show_plot):
+def plot_data(indicadors):
     '''
         Plotagem dos dados com o matplotlib
     '''
@@ -90,9 +91,6 @@ def plot_data(indicadors, show_plot):
     plt.legend(['Média Móvel Exponencial', 'Índice de Força Relativa', 'Banda de Bollinger Superior', 'Banda de Bollinger Inferior'])
     plt.title('Indicadores')
     plt.savefig(f"tmp/indicadors_{datetime.now().strftime('%Y%m%d%H%M%S')}.png", dpi=500)
-    
-    if show_plot:
-        plt.show()
 
 
 def validate(date):
