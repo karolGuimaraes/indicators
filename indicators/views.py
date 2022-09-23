@@ -7,7 +7,7 @@ import sys
 import matplotlib.pyplot as plt
 
 DAYS_RSI = 14
-DAYS_BOL = 20
+DAYS_BB = 20
 
 
 @click.command()
@@ -25,6 +25,7 @@ def main(start_date, end_date, days, plot):
 
     dataset = pd.read_csv('static/dataset/bitcoin.csv')
 
+    # Filtrando o arquivo pela data
     filter = (dataset['Timestamp'] >= timestamp_start_date) & (dataset['Timestamp'] <= timestamp_end_date)
     dataset = dataset[filter]
 
@@ -41,6 +42,8 @@ def main(start_date, end_date, days, plot):
 
         ema = exponential_moving_average(close_price, days, ema)
 
+
+        # Variação de ganhos e perdas para o calc. do IFR
         variation = close_price - last_close_price
         if variation > 0:
             gains[index] = variation
@@ -54,9 +57,10 @@ def main(start_date, end_date, days, plot):
 
 
         quotes[index] = close_price
-        if (index+1) >= DAYS_BOL:
+        if (index+1) >= DAYS_BB:
             bolu, bold = bollinger_bands(quotes)
   
+
         last_close_price = row.Close
         data.append([timestamp, ema, rsi, bolu, bold])
 
@@ -108,9 +112,9 @@ def validate(date):
 
 def exponential_moving_average(current_price, days, last_ema):
     '''
-        Média Móvel Exponencial
+        Média Móvel Exponencial / MME - EMA
 
-        MME (ema) = [preço atual - MME(anterior)] x (2/dias+1) + MME(anterior)
+        MME = [preço atual - MME(anterior)] x (2/dias+1) + MME(anterior)
     '''
 
     ema = (current_price - last_ema) * (2/(days+1)) + last_ema
@@ -120,9 +124,9 @@ def exponential_moving_average(current_price, days, last_ema):
 
 def relative_strength_index(gains, losses):
     '''
-        Índice de Força Relativa
+        Índice de Força Relativa / IRF - RSI
 
-        IRF (rsi) = 100 - ( 100 / ( 1 + ( ( gain/N ) / ( loss/N ) )))
+        IRF = 100 - ( 100 / ( 1 + ( ( gain/N ) / ( loss/N ) )))
 
         gain = Média das cotações dos últimos N dias em que a cotação da ação subiu.
         loss = Média das cotações dos últimos N dias em que a cotação da ação caiu.
@@ -131,12 +135,14 @@ def relative_strength_index(gains, losses):
 
     total_gain, total_loss = 0, 0
 
+    # Ganhos dos últimos N dias
     gain_period = dict(itertools.islice(sorted(gains.items(), reverse=True), DAYS_RSI))
     for value in gain_period.values():
         total_gain += value
     
     avg_gain = total_gain / DAYS_RSI
 
+    # Perdas dos últimos N dias
     loss_period = dict(itertools.islice(sorted(losses.items(), reverse=True), DAYS_RSI))
     for value in loss_period.values():
         total_loss += value
@@ -156,14 +162,20 @@ def bollinger_bands(quotes):
         Inferior (bold) = Média Móvel Simples (20 dias) – (2 x Desvio Padrão de 20 dias).
     '''
 
-    quotes_period = dict(itertools.islice(sorted(quotes.items(), reverse=True), DAYS_BOL))
+    # Últimas N cotações do ativo
+    quotes_period = dict(itertools.islice(sorted(quotes.items(), reverse=True), DAYS_BB))
     values = list(quotes_period.values())
 
+    # Média móvel simples
     simple_moving_average = np.average(values)
 
+    # Desvio padrão
     standard_deviation = np.std(values)
 
+    # Banda Superior
     bolu = simple_moving_average + ( 2 * standard_deviation )
+
+    # Banda Inferior
     bold = simple_moving_average - ( 2 * standard_deviation )
 
     return bolu, bold
